@@ -1,57 +1,8 @@
-/*
-  Warnings:
-
-  - You are about to drop the column `published` on the `Post` table. All the data in the column will be lost.
-  - You are about to drop the column `name` on the `User` table. All the data in the column will be lost.
-  - You are about to alter the column `email` on the `User` table. The data in that column could be lost. The data in that column will be cast from `Text` to `VarChar(30)`.
-  - You are about to drop the `Profile` table. If the table is not empty, all the data it contains will be lost.
-  - Added the required column `body` to the `Post` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `categoryId` to the `Post` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `image` to the `Post` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `typeId` to the `Post` table without a default value. This is not possible if the table is not empty.
-  - Made the column `content` on table `Post` required. This step will fail if there are existing NULL values in that column.
-  - Added the required column `password` to the `User` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `phone` to the `User` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `randToken` to the `User` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `updatedAt` to the `User` table without a default value. This is not possible if the table is not empty.
-
-*/
 -- CreateEnum
 CREATE TYPE "Role" AS ENUM ('USER', 'ADMIN', 'AUTHOR');
 
 -- CreateEnum
 CREATE TYPE "Status" AS ENUM ('ACTIVE', 'INACTIVE', 'FREEZE');
-
--- DropForeignKey
-ALTER TABLE "public"."Profile" DROP CONSTRAINT "Profile_userId_fkey";
-
--- AlterTable
-ALTER TABLE "Post" DROP COLUMN "published",
-ADD COLUMN     "body" TEXT NOT NULL,
-ADD COLUMN     "categoryId" INTEGER NOT NULL,
-ADD COLUMN     "image" TEXT NOT NULL,
-ADD COLUMN     "typeId" INTEGER NOT NULL,
-ALTER COLUMN "content" SET NOT NULL;
-
--- AlterTable
-ALTER TABLE "User" DROP COLUMN "name",
-ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-ADD COLUMN     "errorLoginCount" SMALLINT NOT NULL DEFAULT 0,
-ADD COLUMN     "firstName" VARCHAR(52),
-ADD COLUMN     "image" TEXT,
-ADD COLUMN     "lastLogin" TIMESTAMP(3),
-ADD COLUMN     "lastName" VARCHAR(52),
-ADD COLUMN     "password" TEXT NOT NULL,
-ADD COLUMN     "phone" VARCHAR(15) NOT NULL,
-ADD COLUMN     "randToken" TEXT NOT NULL,
-ADD COLUMN     "role" "Role" NOT NULL DEFAULT 'USER',
-ADD COLUMN     "status" "Status" NOT NULL DEFAULT 'ACTIVE',
-ADD COLUMN     "updatedAt" TIMESTAMP(3) NOT NULL,
-ALTER COLUMN "email" DROP NOT NULL,
-ALTER COLUMN "email" SET DATA TYPE VARCHAR(30);
-
--- DropTable
-DROP TABLE "public"."Profile";
 
 -- CreateTable
 CREATE TABLE "Category" (
@@ -67,6 +18,42 @@ CREATE TABLE "Type" (
     "name" VARCHAR(52) NOT NULL,
 
     CONSTRAINT "Type_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Post" (
+    "id" SERIAL NOT NULL,
+    "title" VARCHAR(255) NOT NULL,
+    "content" TEXT NOT NULL,
+    "body" TEXT NOT NULL,
+    "image" TEXT NOT NULL,
+    "authorId" INTEGER NOT NULL,
+    "categoryId" INTEGER NOT NULL,
+    "typeId" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Post_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "User" (
+    "id" SERIAL NOT NULL,
+    "firstName" VARCHAR(52),
+    "lastName" VARCHAR(52),
+    "phone" VARCHAR(15) NOT NULL,
+    "password" TEXT NOT NULL,
+    "email" VARCHAR(30),
+    "role" "Role" NOT NULL DEFAULT 'USER',
+    "status" "Status" NOT NULL DEFAULT 'ACTIVE',
+    "lastLogin" TIMESTAMP(3),
+    "errorLoginCount" SMALLINT NOT NULL DEFAULT 0,
+    "randToken" TEXT NOT NULL,
+    "image" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -136,6 +123,27 @@ CREATE TABLE "ProductOnOrder" (
 
     CONSTRAINT "ProductOnOrder_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateTable
+CREATE TABLE "Otp" (
+    "id" SERIAL NOT NULL,
+    "phone" VARCHAR(15) NOT NULL,
+    "otp" VARCHAR(6) NOT NULL,
+    "rememberToken" TEXT NOT NULL,
+    "verifyToken" TEXT,
+    "count" SMALLINT NOT NULL DEFAULT 0,
+    "error" SMALLINT NOT NULL DEFAULT 0,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Otp_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- AddForeignKey
+ALTER TABLE "Post" ADD CONSTRAINT "Post_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Post" ADD CONSTRAINT "Post_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

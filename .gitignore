@@ -24,3 +24,7 @@ pnpm-debug.log*
 
 
 /generated/prisma
+
+/app/generated/prisma
+
+/src/generated/prisma

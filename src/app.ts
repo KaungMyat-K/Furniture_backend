@@ -4,7 +4,8 @@ import compression from "compression";
 import cors from "cors";
 import morgan from "morgan";
 import { limiter } from "./middlewares/rateLimiter";
-import healRout from "./routes/v1/health";
+import healRoutes from "./routes/v1/health";
+import authRoutes from "./routes/v1/auth";
 
 export const app = express();
 
@@ -17,7 +18,10 @@ app
   .use(compression())
   .use(limiter);
 
-app.use("/api/v1", healRout);
+app.use("/api/v1", healRoutes);
+app.use("/api/v1", authRoutes);
+
+app.use(express.static("public"));
 
 app.use((error: any, req: Request, res: Response, next: NextFunction) => {
   const status = error.status || 500;
